@@ -9,10 +9,10 @@ Supported intents:
 - compare
 
 Return ONLY valid JSON in this exact format:
-{
+{{
   "intent": "analyze|recommend|compare",
   "tickers": ["AAPL"]
-}
+}}
 
 Rules:
 - Convert company names to likely stock tickers when obvious:
@@ -32,25 +32,87 @@ User query:
 {query}
 """
 
+# RECOMMENDATION_PROMPT = """
+# You are a cautious stock research assistant.
+
+# Given the following stock metrics, recent news, news sentiment, and user profile, provide:
+# 1. A short summary
+# 2. A recommendation: Buy, Hold, Caution, or Watch
+# 3. A brief explanation
+# 4. A risk level: Low, Moderate, or High
+# 5. A personal fit assessment
+
+# Rules:
+# - Do NOT promise returns
+# - Do NOT give financial advice wording
+# - Keep it concise and practical
+# - Base your answer only on the metrics, news, sentiment, and profile provided
+# - Consider both technical trend and recent news context
+# - Tailor the answer to the user's profile
+# - Do not rely on news alone
+
+# Ticker: {ticker}
+# Current Price: {current_price}
+# 5-day Change %: {change_pct_5d}
+# 20-day Change %: {change_pct_20d}
+# Volatility %: {volatility}
+# Trend: {trend}
+
+# User Profile:
+# - Risk Appetite: {risk_appetite}
+# - Investment Horizon: {investment_horizon}
+# - Preferred Sectors: {preferred_sectors}
+# - Avoid Sectors: {avoid_sectors}
+# - Investing Style: {investing_style}
+
+# Overall News Sentiment: {overall_news_sentiment}
+
+# Recent News:
+# {news_text}
+
+# Return in this exact format:
+
+# Summary: ...
+# Recommendation: ...
+# Risk: ...
+# Personal Fit: ...
+# Reason: ...
+# """
+
 RECOMMENDATION_PROMPT = """
 You are a cautious stock research assistant.
 
-Given the following stock metrics, recent news, and user profile, provide:
-1. A short summary
-2. A recommendation: Buy, Hold, Caution, or Watch
-3. A brief explanation
-4. A risk level: Low, Moderate, or High
-5. A personal fit assessment
+You must:
+1. Analyze stock metrics
+2. Analyze each news item sentiment
+3. Determine overall news sentiment
+4. Generate a recommendation aligned with the user profile
 
-Rules:
-- Do NOT promise returns
-- Do NOT give financial advice wording
-- Keep it concise and practical
-- Base your answer only on the metrics, news, and profile provided
-- Consider both technical trend and recent news context
-- Tailor the answer to the user's profile
-- Do not rely on news alone
+STRICT RULES:
+- Return ONLY valid JSON
+- Do NOT include markdown or extra text
+- Do NOT explain outside JSON
+- If momentum is strong and sentiment is positive, you may lean toward Buy unless risk is high
 
+Return EXACTLY this format:
+
+{{
+  "overall_news_sentiment": "Positive|Negative|Neutral",
+  "news_items": [
+    {{
+      "title": "...",
+      "sentiment": "Positive|Negative|Neutral",
+      "reason": "..."
+    }}
+  ],
+  "summary": "...",
+  "recommendation": "Buy|Hold|Caution|Watch",
+  "risk": "Low|Moderate|High",
+  "personal_fit": "...",
+  "reason": "..."
+}}
+
+Stock:
 Ticker: {ticker}
 Current Price: {current_price}
 5-day Change %: {change_pct_5d}
@@ -65,16 +127,8 @@ User Profile:
 - Avoid Sectors: {avoid_sectors}
 - Investing Style: {investing_style}
 
-Recent News:
+News:
 {news_text}
-
-Return in this exact format:
-
-Summary: ...
-Recommendation: ...
-Risk: ...
-Personal Fit: ...
-Reason: ...
 """
 
 COMPARE_PROMPT = """
@@ -104,4 +158,35 @@ Comparison: ...
 Stronger Momentum: ...
 Lower Risk: ...
 Overall View: ...
+"""
+
+NEWS_SENTIMENT_PROMPT = """
+You are a finance news sentiment classifier.
+
+STRICT RULES:
+- Return ONLY valid JSON
+- Do NOT include explanations outside JSON
+- Do NOT include markdown
+- Do NOT include text before or after JSON
+
+For each news item, classify sentiment:
+- Positive
+- Negative
+- Neutral
+
+Return EXACTLY:
+
+{{
+  "items": [
+    {{
+      "title": "...",
+      "sentiment": "Positive|Negative|Neutral",
+      "reason": "..."
+    }}
+  ],
+  "overall_sentiment": "Positive|Negative|Neutral"
+}}
+
+News:
+{news_text}
 """

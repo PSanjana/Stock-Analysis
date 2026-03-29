@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+from collections import Counter
+import re
 from typing import Any, Dict, List
 import statistics
 
@@ -110,4 +111,67 @@ def get_stock_snapshot(ticker: str) -> Dict[str, Any]:
         "ticker": ticker.upper(),
         "prices": prices,
         "metrics": metrics,
+    }
+
+POSITIVE_WORDS = {
+    "beat", "beats", "growth", "surge", "gain", "gains", "up", "upgrade",
+    "strong", "bullish", "profit", "profits", "record", "rise", "rises",
+    "positive", "expands", "expansion", "outperform", "buyback", "innovation"
+}
+
+NEGATIVE_WORDS = {
+    "miss", "misses", "drop", "drops", "fall", "falls", "down", "downgrade",
+    "weak", "bearish", "loss", "losses", "lawsuit", "decline", "declines",
+    "negative", "cut", "cuts", "risk", "risks", "investigation", "concern"
+}
+
+
+def label_single_news_sentiment(title: str, summary: str) -> str:
+    """
+    Very simple rule-based sentiment labeler for one news item.
+    """
+    text = f"{title} {summary}".lower()
+    words = re.findall(r"\b[a-z]+\b", text)
+
+    positive_score = sum(1 for w in words if w in POSITIVE_WORDS)
+    negative_score = sum(1 for w in words if w in NEGATIVE_WORDS)
+
+    if positive_score > negative_score:
+        return "Positive"
+    elif negative_score > positive_score:
+        return "Negative"
+    return "Neutral"
+
+
+def label_news_sentiments(news_items: List[Dict[str, str]]) -> Dict[str, Any]:
+    """
+    Label sentiment for each news item and compute overall sentiment.
+    """
+    labeled_items: List[Dict[str, str]] = []
+    sentiment_counts = Counter()
+
+    for item in news_items:
+        title = item.get("title", "")
+        summary = item.get("summary", "")
+        sentiment = label_single_news_sentiment(title, summary)
+        sentiment_counts[sentiment] += 1
+
+        labeled_items.append(
+            {
+                **item,
+                "sentiment": sentiment,
+            }
+        )
+
+    if sentiment_counts["Positive"] > sentiment_counts["Negative"]:
+        overall_sentiment = "Positive"
+    elif sentiment_counts["Negative"] > sentiment_counts["Positive"]:
+        overall_sentiment = "Negative"
+    else:
+        overall_sentiment = "Neutral"
+
+    return {
+        "labeled_news": labeled_items,
+        "overall_sentiment": overall_sentiment,
+        "sentiment_counts": dict(sentiment_counts),
     }
