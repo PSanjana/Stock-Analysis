@@ -32,52 +32,7 @@ User query:
 {query}
 """
 
-# RECOMMENDATION_PROMPT = """
-# You are a cautious stock research assistant.
 
-# Given the following stock metrics, recent news, news sentiment, and user profile, provide:
-# 1. A short summary
-# 2. A recommendation: Buy, Hold, Caution, or Watch
-# 3. A brief explanation
-# 4. A risk level: Low, Moderate, or High
-# 5. A personal fit assessment
-
-# Rules:
-# - Do NOT promise returns
-# - Do NOT give financial advice wording
-# - Keep it concise and practical
-# - Base your answer only on the metrics, news, sentiment, and profile provided
-# - Consider both technical trend and recent news context
-# - Tailor the answer to the user's profile
-# - Do not rely on news alone
-
-# Ticker: {ticker}
-# Current Price: {current_price}
-# 5-day Change %: {change_pct_5d}
-# 20-day Change %: {change_pct_20d}
-# Volatility %: {volatility}
-# Trend: {trend}
-
-# User Profile:
-# - Risk Appetite: {risk_appetite}
-# - Investment Horizon: {investment_horizon}
-# - Preferred Sectors: {preferred_sectors}
-# - Avoid Sectors: {avoid_sectors}
-# - Investing Style: {investing_style}
-
-# Overall News Sentiment: {overall_news_sentiment}
-
-# Recent News:
-# {news_text}
-
-# Return in this exact format:
-
-# Summary: ...
-# Recommendation: ...
-# Risk: ...
-# Personal Fit: ...
-# Reason: ...
-# """
 
 RECOMMENDATION_PROMPT = """
 You are a cautious stock research assistant.
